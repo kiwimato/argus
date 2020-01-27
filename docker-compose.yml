@@ -1,0 +1,21 @@
+version: "2"
+services:
+  redis:
+    image: 'redis:5.0-alpine'
+    command: redis-server
+    volumes:
+      - './redis:/data'
+    ports:
+      - '6379:6379'
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./argus_web/media:/media
+      - ./argus_web/static:/static
+      - ./argus_web/frontend:/frontend
+      - /tmp/webapp.sock:/webapp.sock
+    ports:
+      - 80:80
