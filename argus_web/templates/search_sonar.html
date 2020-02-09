@@ -1,0 +1,103 @@
+<html>
+<head>
+    <title>ARGUS</title>
+    <script type="text/javascript" src="/static/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="/static/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/spin.css">
+    <link rel="stylesheet" href="/static/custom.css">
+</head>
+<body style="text-align: center;">
+<div class="p-3 mb-3 bg-dark text-white">
+    <h1>Search within SONAR</h1>
+
+    <br>
+    <form class="form-group bg-dark text-white lead" id="search-sonar-form" action="/recon/explore-sonar/"
+          method="post">
+        <div class="form-group bg-dark text-white">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit"/>
+        </div>
+    </form>
+    <div id="loading" style="display:none; margin-bottom: 1em;"></div>
+
+    <table id="table_id" class="table table-dark">
+    </table>
+</div>
+<script type="text/javascript">
+    var frm = $('#search-sonar-form');
+    var pgrbar = $('#loading');
+    frm.submit(function () {
+        $.ajax({
+            type: frm.attr('method'),
+            url: frm.attr('action'),
+            data: frm.serialize(),
+            success: function (data) {
+                if (data.task_id != null) {
+                    get_task_info(data.task_id);
+                }
+            },
+            error: function (data) {
+                console.log("Something went wrong!");
+            }
+        });
+        return false;
+    });
+
+    function get_task_info(task_id) {
+        $.ajax({
+            type: 'get',
+            url: '/recon/get-task-info/',
+            data: {'task_id': task_id},
+            success: function (data) {
+                frm.html('');
+                if (data.state == 'PENDING') {
+                    frm.html('Please wait...');
+                    pgrbar.css('display', 'inline-block');
+                } else if (data.state == 'PROGRESS' || data.state == 'SUCCESS') {
+                    pgrbar.css('display', 'none');
+                    loadDataSet(data.result)
+                }
+                if (data.state != 'SUCCESS') {
+                    setTimeout(function () {
+                        get_task_info(task_id)
+                    }, 1000);
+                }
+            },
+            error: function (data) {
+                frm.html("Something went wrong!");
+            }
+        });
+    }
+
+    function loadDataSet(dataSet) {
+        $(document).ready(function () {
+            $('#table_id').DataTable({
+                data: dataSet,
+                paging: false,
+                columns: [
+                    {title: "timestamp"},
+                    {title: "name"},
+                    {title: "type"},
+                    {title: "value"}
+                ]
+            //     "columnDefs": [{
+            //         "targets": -1,
+            //         "data": null,
+            //         "defaultContent": "<button>Start a NMAP scan!</button>"
+            //     }]
+            // });
+            //
+            // $('#table_id tbody').on('click', 'button', function () {
+            //     var data = table.row($(this).parents('tr')).data();
+            //     alert(data[0] + "'s salary is: " + data[5]);
+             });
+        });
+    }
+</script>
+
+
+</body>
+</html>

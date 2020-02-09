@@ -1,11 +1,10 @@
 from django.urls import path
-from django.conf.urls import url
 
-from .views import OrderListJson
 from . import views
+from .views import explore_sonar, get_task_info
 
 urlpatterns = [
     path('', views.index, name='index'),
-    url('/datatable/data/$', OrderListJson.as_view(), name='order_list_json'),
-    path('task/<str:task_id>/', views.TaskView.as_view(), name='task'),
+    path('explore-sonar/', explore_sonar),
+    path('get-task-info/', get_task_info),
 ]
